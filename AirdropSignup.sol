@@ -11,10 +11,10 @@ contract Signup {
     event NetworkAdded(string _network_name, uint256 _network_id);
     event NetworkRemoved(string _network_name, uint256 _network_id);
     
-    mapping public (uint256=>string) networks;
-    mapping public (uint256=>bool)   network_exists;
+    mapping (uint256=>string) public networks;
+    mapping (uint256=>bool) public  network_exists;
     
-    mapping public (address=>mapping (uint256=>string)) registries;
+    mapping (address=>mapping (uint256=>string)) public registries;
     
     function addNetwork(uint256 _id, string memory _network_name) public only_owner
     {
@@ -23,6 +23,11 @@ contract Signup {
         networks[_id] = _network_name;
         
         emit NetworkAdded(_network_name, _id);
+    }
+    
+    function getNetwork(uint256 _id) public view returns(string memory)
+    {
+        return networks[_id];
     }
     
     function removeNetwork(uint256 _id) public only_owner
