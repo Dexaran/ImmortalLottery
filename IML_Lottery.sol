@@ -41,6 +41,11 @@ contract Lottery {
     
     mapping (address => player) public players;
     
+    function() external payable
+    {
+        deposit();
+    }
+    
     function get_round() public view returns (uint256)
     {
         return current_round;
