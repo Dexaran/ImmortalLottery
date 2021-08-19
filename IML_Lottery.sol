@@ -36,9 +36,10 @@ contract Lottery {
     
     struct player
     {
-        uint8   num_deposits;
+        mapping (uint256 => uint8)   num_deposits;
         uint256 last_round;
-        mapping (uint8 => interval) win_conditions; // This player is considered to be a winner when RNG provides a number that matches this intervals
+        mapping (uint256 => mapping (uint8 => interval)) win_conditions; // This player is considered to be a winner when RNG provides a number that matches this intervals
+        mapping (uint256 => bool)    round_refunded;
     }
     
     mapping (address => player) public players;
@@ -75,22 +76,22 @@ contract Lottery {
     function deposit() public payable
     {
         require (msg.value > min_allowed_bet, "Minimum bet condition is not met");
-        require (players[msg.sender].num_deposits < max_allowed_deposits || players[msg.sender].last_round < current_round, "Too much deposits during this round");
+        require (players[msg.sender].num_deposits[current_round] < max_allowed_deposits || players[msg.sender].last_round < current_round, "Too much deposits during this round");
         require (get_phase() == 1, "Deposits are only allowed during the depositing phase");
         
         if(players[msg.sender].last_round < current_round)
         {
             players[msg.sender].last_round   = current_round;
-            players[msg.sender].num_deposits = 0;
+            players[msg.sender].num_deposits[current_round] = 0;
         }
         else
         {
-            players[msg.sender].num_deposits++;
+            players[msg.sender].num_deposits[current_round]++;
         }
         
         // Assign the "winning interval" for the player
-        players[msg.sender].win_conditions[players[msg.sender].num_deposits].interval_start = current_interval_end;
-        players[msg.sender].win_conditions[players[msg.sender].num_deposits].interval_end   = current_interval_end + msg.value;
+        players[msg.sender].win_conditions[current_round][players[msg.sender].num_deposits[current_round]].interval_start = current_interval_end;
+        players[msg.sender].win_conditions[current_round][players[msg.sender].num_deposits[current_round]].interval_end   = current_interval_end + msg.value;
         current_interval_end += msg.value;
         
         uint256 _reward_with_fees = msg.value;
@@ -104,6 +105,25 @@ contract Lottery {
         _reward_with_fees -= msg.value * entropy_fee / 1000;
         
         round_reward += _reward_with_fees;
+    }
+    
+    function refund(uint256 _round) external
+    {
+        require(current_round > _round, "Only refunds of finished rounds are allowed");
+        require(!round_successful[_round], "Only refunds of FAILED rounds are allowed");
+        
+        // Calculating the refund amount
+        uint256 _reward = 0;
+        for (uint8 i = 0; i < players[msg.sender].num_deposits[_round]; i++)
+        {
+            _reward += players[msg.sender].win_conditions[_round][i].interval_end - players[msg.sender].win_conditions[_round][i].interval_start;
+        }
+        
+        // Subtract the entropy fee
+        _reward -= _reward * entropy_fee / 1000;
+        
+        players[msg.sender].round_refunded[_round] = true;
+        msg.sender.transfer(_reward);
     }
     
     function send_entropy_reward(uint256 _reward) internal
@@ -149,9 +169,9 @@ contract Lottery {
             
             // Paying the winner
             // Safe loop, cannot be more than 20 iterations
-            for (uint8 i=0; i<players[_winner].num_deposits; i++)
+            for (uint8 i = 0; i<players[_winner].num_deposits[current_round]; i++)
             {
-                if(players[_winner].win_conditions[i].interval_start < RNG() && players[_winner].win_conditions[i].interval_end > RNG())
+                if(players[_winner].win_conditions[current_round][i].interval_start < RNG() && players[_winner].win_conditions[current_round][i].interval_end > RNG())
                 {
                     _winner.transfer(round_reward);
                     round_reward_paid = true;
