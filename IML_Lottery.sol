@@ -24,6 +24,8 @@ contract Lottery {
     uint256 public round_reward;
     bool    public round_reward_paid = false;
     
+    mapping (uint256 => bool) public round_successful; // Allows "refunds" of not succesful rounds.
+    
     uint256 public current_interval_end; // Used for winner calculations
     
     struct interval
@@ -94,10 +96,11 @@ contract Lottery {
         uint256 _reward_with_fees = msg.value;
         
         // TODO: replace it with SafeMath
-        send_token_reward(msg.value * token_reward_fee / 1000);
+        // TODO: update the contract to only send rewards upon completion of the round
+        //send_token_reward(msg.value * token_reward_fee / 1000);
         _reward_with_fees -= msg.value * token_reward_fee / 1000;
         
-        send_entropy_reward(msg.value * entropy_fee / 1000);
+        //send_entropy_reward(msg.value * entropy_fee / 1000);
         _reward_with_fees -= msg.value * entropy_fee / 1000;
         
         round_reward += _reward_with_fees;
@@ -120,6 +123,7 @@ contract Lottery {
     {
         require(current_round == 0 || round_reward_paid, "Cannot start a new round while reward for the previous one is not paid. Call finish_round function");
         
+        current_round++;
         round_start_timestamp = now;
         current_interval_end  = 0;
         round_reward_paid     = false;
@@ -134,19 +138,40 @@ contract Lottery {
     {
         // Important: finishing an active round does not automatically start a new one
         require(now > round_start_timestamp + deposits_phase_duration + entropy_phase_duration, "Round can be finished after the entropy reveal phase only");
-        require(check_entropy_criteria(), "There is not enough entropy to ensure a fair winner calculation");
         
-        // Safe loop, cannot be more than 20 iterations
-        for (uint8 i=0; i<players[_winner].num_deposits; i++)
+        
+        //require(check_entropy_criteria(), "There is not enough entropy to ensure a fair winner calculation");
+        
+        if(check_entropy_criteria())
         {
-            if(players[_winner].win_conditions[i].interval_start < RNG() && players[_winner].win_conditions[i].interval_end > RNG())
+            // Round is succsefully completed and there was enough entropy provided
+            round_successful[current_round] = true;
+            
+            // Paying the winner
+            // Safe loop, cannot be more than 20 iterations
+            for (uint8 i=0; i<players[_winner].num_deposits; i++)
             {
-                _winner.transfer(round_reward);
-                round_reward_paid = true;
+                if(players[_winner].win_conditions[i].interval_start < RNG() && players[_winner].win_conditions[i].interval_end > RNG())
+                {
+                    _winner.transfer(round_reward);
+                    round_reward_paid = true;
+                }
             }
+        }
+        else
+        {
+            // Round is completed without sufficient entropy => allow refunds and increase the round counter
+            // round_successful[current_round] = false; // This values are `false` by default in solidity
+            
+            round_reward_paid = true;
         }
         
         require(round_reward_paid, "The provided address is not a winner of the current round");
+    }
+    
+    function pay_fees() internal
+    {
+        
     }
     
     function RNG() public view returns (uint256)
