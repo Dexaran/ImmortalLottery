@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.5.1;
+pragma solidity ^0.8.0;
 
-contract Entropy_interface {
-    function get_entropy() public view returns (uint256);
+abstract contract Entropy_interface {
+    function get_entropy() public virtual view returns (uint256);
 }
 
 contract Lottery {
@@ -44,7 +44,7 @@ contract Lottery {
     
     mapping (address => player) public players;
     
-    function() external payable
+    receive() external payable
     {
         deposit();
     }
@@ -61,11 +61,11 @@ contract Lottery {
         // 2 - deposits are acquired         / entropy revealing phase
         
         uint8 _status = 0;
-        if(round_start_timestamp < now && now < round_start_timestamp + deposits_phase_duration)
+        if(round_start_timestamp < block.timestamp && block.timestamp < round_start_timestamp + deposits_phase_duration)
         {
             _status = 1;
         }
-        else if (round_start_timestamp < now && now < round_start_timestamp + deposits_phase_duration + entropy_phase_duration)
+        else if (round_start_timestamp < block.timestamp && block.timestamp < round_start_timestamp + deposits_phase_duration + entropy_phase_duration)
         {
             _status = 2;
         }
@@ -123,7 +123,7 @@ contract Lottery {
         _reward -= _reward * entropy_fee / 1000;
         
         players[msg.sender].round_refunded[_round] = true;
-        msg.sender.transfer(_reward);
+        payable(msg.sender).transfer(_reward);
     }
     
     function send_entropy_reward(uint256 _reward) internal
@@ -144,7 +144,7 @@ contract Lottery {
         require(current_round == 0 || round_reward_paid, "Cannot start a new round while reward for the previous one is not paid. Call finish_round function");
         
         current_round++;
-        round_start_timestamp = now;
+        round_start_timestamp = block.timestamp;
         current_interval_end  = 0;
         round_reward_paid     = false;
         
@@ -157,7 +157,7 @@ contract Lottery {
     function finish_round(address payable _winner) public
     {
         // Important: finishing an active round does not automatically start a new one
-        require(now > round_start_timestamp + deposits_phase_duration + entropy_phase_duration, "Round can be finished after the entropy reveal phase only");
+        require(block.timestamp > round_start_timestamp + deposits_phase_duration + entropy_phase_duration, "Round can be finished after the entropy reveal phase only");
         
         
         //require(check_entropy_criteria(), "There is not enough entropy to ensure a fair winner calculation");
