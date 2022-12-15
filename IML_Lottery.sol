@@ -230,4 +230,9 @@ contract Lottery {
         require(msg.sender == entropy_contract);
         _;
     }
+
+    function set_entropy_contract(address payable _new_contract) public only_owner
+    {
+        entropy_contract = _new_contract;
+    }
 }
