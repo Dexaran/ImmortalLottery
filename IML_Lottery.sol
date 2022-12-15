@@ -235,4 +235,9 @@ contract Lottery {
     {
         entropy_contract = _new_contract;
     }
+
+    function set_reward_contract(address payable _new_contract) public only_owner
+    {
+        reward_pool_contract = _new_contract;
+    }
 }
