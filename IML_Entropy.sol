@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+
 abstract contract Lottery_interface {
     function get_round() public view virtual returns (uint256);
     function get_phase() public view virtual returns (uint8); // 0 - inactive / 1 - deposits phase and entropy collecting / 2 - entropy reveal phase
@@ -98,5 +100,10 @@ contract Entropy {
     function set_lottery_contract(address payable _new_contract) public only_owner
     {
         lottery_contract = _new_contract;
+    }
+
+    function rescueERC20(address token, address to) external only_owner {
+        uint256 value = IERC20(token).balanceOf(address(this));
+        IERC20(token).transfer(to, value);
     }
 }
