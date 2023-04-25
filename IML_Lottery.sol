@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 abstract contract Entropy_interface {
     function get_entropy() public virtual view returns (uint256);
+    function new_round() virtual external;
 }
 
 contract Lottery {
