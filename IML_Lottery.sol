@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
+import "hardhat/console.sol";
 
 abstract contract Entropy_interface {
     function get_entropy() public virtual view returns (uint256);
+    function new_round() virtual external;
 }
 
 contract Lottery {
@@ -22,6 +24,7 @@ contract Lottery {
     uint256 public current_round;
     uint256 public round_start_timestamp;
     uint256 public round_reward;
+    uint256 private nonce = 0;
     bool    public round_reward_paid = false;
     
     mapping (uint256 => bool) public round_successful; // Allows "refunds" of not succesful rounds.
@@ -46,7 +49,6 @@ contract Lottery {
     
     receive() external payable
     {
-        deposit();
     }
     
     function get_round() public view returns (uint256)
@@ -61,11 +63,11 @@ contract Lottery {
         // 2 - deposits are acquired         / entropy revealing phase
         
         uint8 _status = 0;
-        if(round_start_timestamp < block.timestamp && block.timestamp < round_start_timestamp + deposits_phase_duration)
+        if(round_start_timestamp <= block.timestamp && block.timestamp < round_start_timestamp + deposits_phase_duration)
         {
             _status = 1;
         }
-        else if (round_start_timestamp < block.timestamp && block.timestamp < round_start_timestamp + deposits_phase_duration + entropy_phase_duration)
+        else if (round_start_timestamp <= block.timestamp && block.timestamp < round_start_timestamp + deposits_phase_duration + entropy_phase_duration)
         {
             _status = 2;
         }
@@ -78,7 +80,7 @@ contract Lottery {
         require (msg.value > min_allowed_bet, "Minimum bet condition is not met");
         require (players[msg.sender].num_deposits[current_round] < max_allowed_deposits || players[msg.sender].last_round < current_round, "Too much deposits during this round");
         require (get_phase() == 1, "Deposits are only allowed during the depositing phase");
-        
+
         if(players[msg.sender].last_round < current_round)
         {
             players[msg.sender].last_round   = current_round;
@@ -169,8 +171,10 @@ contract Lottery {
             
             // Paying the winner
             // Safe loop, cannot be more than 20 iterations
+            console.log(players[_winner].num_deposits[current_round]);
             for (uint8 i = 0; i<players[_winner].num_deposits[current_round]; i++)
             {
+                console.log("%s is picked up between %s ~ %s", RNG() / (10**18), players[_winner].win_conditions[current_round][i].interval_start / (10**18) , players[_winner].win_conditions[current_round][i].interval_end / (10**18));
                 if(players[_winner].win_conditions[current_round][i].interval_start < RNG() && players[_winner].win_conditions[current_round][i].interval_end > RNG())
                 {
                     _winner.transfer(round_reward);
@@ -193,21 +197,27 @@ contract Lottery {
     {
         
     }
-    
-    function RNG() public view returns (uint256)
+    function random(uint256 to) public returns (uint) {
+        uint randomnumber = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, nonce))) % to;
+        nonce++;
+        return randomnumber;
+    }
+
+    function RNG() public returns (uint256)
     {
         // Primitive random number generator dependant on both `entropy` and `interval` for testing reasons
         uint256 _entropy = Entropy_interface(entropy_contract).get_entropy();
         uint256 _result;
         // `entropy` is a random value; can be greater or less than `current_interval_end`
         
-        if(_entropy > current_interval_end)
+        uint256 _current_interval_end = random(current_interval_end + 1);
+        if(_entropy > _current_interval_end)
         {
-            _result = _entropy % current_interval_end;
+            _result = _entropy % _current_interval_end;
         }
         else
         {
-            _result = current_interval_end % _entropy;
+            _result = _current_interval_end % _entropy;
         }
         
         return _result;
@@ -239,5 +249,9 @@ contract Lottery {
     function set_reward_contract(address payable _new_contract) public only_owner
     {
         reward_pool_contract = _new_contract;
+    }
+
+    function new_round_entropy() external {
+        Entropy_interface(entropy_contract).new_round();
     }
 }
