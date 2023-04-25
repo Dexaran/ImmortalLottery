@@ -102,6 +102,11 @@ contract Entropy {
         lottery_contract = _new_contract;
     }
 
+    function set_collateral_amount(uint256 _collateral) public only_owner
+    {
+        collateral_threshold = _collateral;
+    }
+
     function rescueERC20(address token, address to) external only_owner {
         uint256 value = IERC20(token).balanceOf(address(this));
         IERC20(token).transfer(to, value);
