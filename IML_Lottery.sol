@@ -151,6 +151,8 @@ contract Lottery {
         current_interval_end  = 0;
         round_reward_paid     = false;
         
+        Entropy_interface(entropy_contract).new_round();
+        
         //require_entropy_provider(msg.sender); // Request the starter of a new round to also provide initial entropy
         
         // Initiate the first deposit of the round
