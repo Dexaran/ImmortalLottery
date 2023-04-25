@@ -105,10 +105,10 @@ contract Lottery {
         
         // TODO: replace it with SafeMath
         // TODO: update the contract to only send rewards upon completion of the round
-        //send_token_reward(msg.value * token_reward_fee / 1000);
+        send_token_reward(msg.value * token_reward_fee / 1000);
         _reward_with_fees -= msg.value * token_reward_fee / 1000;
         
-        //send_entropy_reward(msg.value * entropy_fee / 1000);
+        send_entropy_reward(msg.value * entropy_fee / 1000);
         _reward_with_fees -= msg.value * entropy_fee / 1000;
         
         round_reward += _reward_with_fees;
