@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.5.1;
+pragma solidity ^0.8.0;
 
-contract Lottery_interface {
-    function get_round() public view returns (uint256);
-    function get_phase() public view returns (uint8); // 0 - inactive / 1 - deposits phase and entropy collecting / 2 - entropy reveal phase
+abstract contract Lottery_interface {
+    function get_round() public view virtual returns (uint256);
+    function get_phase() public view virtual returns (uint8); // 0 - inactive / 1 - deposits phase and entropy collecting / 2 - entropy reveal phase
 }
 
 contract Entropy {
@@ -26,7 +26,12 @@ contract Entropy {
     uint256 public current_round = 0;
     uint256 public num_providers = 0;                   // The number of entropy providers for the current round
     
-    function() external payable
+    receive() external payable
+    {
+        deposit_entropy_reward();
+    }
+
+    fallback() external payable
     {
         deposit_entropy_reward();
     }
@@ -69,7 +74,7 @@ contract Entropy {
         require(sha256(abi.encodePacked(_entropy_payload, _salt)) == entropy_providers[msg.sender].entropy_hash, "Entropy values do not match the provided hash");
         // require(Lottery_interface(lottery_contract).get_phase() == 2, "Entropy reveals are only allowed during the reveal phase");
         entropy += _entropy_payload;
-        msg.sender.transfer(collateral_threshold + (entropy_reward / num_providers));
+        payable(msg.sender).transfer(collateral_threshold + (entropy_reward / num_providers));
     }
     
     function test_hash(uint256 _entropy_payload, uint256 _salt) pure public returns (bytes32)
