@@ -68,7 +68,7 @@ contract Lottery {
         // 2 - deposits are acquired         / entropy revealing phase
         
         uint8 _status = 0;
-        if(round_start_timestamp < block.timestamp && block.timestamp < round_start_timestamp + deposits_phase_duration)
+        if(round_start_timestamp <= block.timestamp && block.timestamp <= round_start_timestamp + deposits_phase_duration)
         {
             _status = 1;
         }
