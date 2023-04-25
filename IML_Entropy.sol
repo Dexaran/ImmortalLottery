@@ -67,7 +67,7 @@ contract Entropy {
     {
         require(entropy_providers[msg.sender].round == current_round, "The address is trying to reveal the entropy for inappropriate round");
         require(sha256(abi.encodePacked(_entropy_payload, _salt)) == entropy_providers[msg.sender].entropy_hash, "Entropy values do not match the provided hash");
-        require(Lottery_interface(lottery_contract).get_phase() == 2, "Entropy reveals are only allowed during the reveal phase");
+        // require(Lottery_interface(lottery_contract).get_phase() == 2, "Entropy reveals are only allowed during the reveal phase");
         entropy += _entropy_payload;
         msg.sender.transfer(collateral_threshold + (entropy_reward / num_providers));
     }
@@ -88,5 +88,10 @@ contract Entropy {
     {
         require(msg.sender == lottery_contract);
         _;
+    }
+
+    function set_lottery_contract(address payable _new_contract) public only_owner
+    {
+        lottery_contract = _new_contract;
     }
 }
