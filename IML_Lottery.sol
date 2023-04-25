@@ -13,11 +13,15 @@ contract Lottery {
     address payable public entropy_contract;
     address payable public reward_pool_contract; // Token rewards go to the special "staking contract"
     
-    uint256 public deposits_phase_duration = 3 days; // The length of a phase when deposits are accepted;
-    uint256 public entropy_phase_duration  = 1 days; // The length of a phase when entropy providers reveal their entropy inputs;
-    
+    //uint256 public deposits_phase_duration = 3 days; // The length of a phase when deposits are accepted;
+    //uint256 public entropy_phase_duration  = 1 days; // The length of a phase when entropy providers reveal their entropy inputs;
+    uint256 public deposits_phase_duration = 10 minutes;
+    uint256 public entropy_phase_duration  = 5 minutes;
+
     uint256 public entropy_fee          = 30;   // (will be divided by 1000 during calculations i.e. 1 means 0.1%) | this reward goes to the entropy providers reward pool
+    // 30 is 3%
     uint256 public token_reward_fee     = 100;  // This reward goes to staked tokens reward pool
+    // 100 is 10%
     
     uint256 public min_allowed_bet      = 1000 ether; // 1K CLO for now
     uint8   public max_allowed_deposits = 20;          // A user can make 20 bets during a single round
@@ -249,5 +253,19 @@ contract Lottery {
     function rescueERC20(address token, address to) external only_owner {
         uint256 value = IERC20(token).balanceOf(address(this));
         IERC20(token).transfer(to, value);
+    }
+
+    function configure(uint256 _min_bet, uint8 _max_deposits, uint256 _deposit_phase_duration, uint256 _reveal_phase_duration) public only_owner
+    {
+        min_allowed_bet = _min_bet;
+        max_allowed_deposits = _max_deposits;
+        deposits_phase_duration = _deposit_phase_duration;
+        entropy_phase_duration  = _reveal_phase_duration;
+    }
+
+    function configureFees(uint256 _entropy_fee, uint256 _token_reward_fee) public only_owner
+    {
+        entropy_fee = _entropy_fee;
+        token_reward_fee = _token_reward_fee;
     }
 }
