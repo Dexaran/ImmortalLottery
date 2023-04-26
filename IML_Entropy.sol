@@ -30,12 +30,14 @@ contract Entropy {
     
     receive() external payable
     {
-        deposit_entropy_reward();
+        //deposit_entropy_reward();
+        entropy_reward += msg.value;
     }
 
     fallback() external payable
     {
-        deposit_entropy_reward();
+        //deposit_entropy_reward();
+        entropy_reward += msg.value;
     }
     
     function get_entropy() public view returns (uint256)
@@ -43,10 +45,12 @@ contract Entropy {
         return entropy;
     }
     
+    /*
     function deposit_entropy_reward() public payable 
     {
         entropy_reward += msg.value;
     }
+    */
     
     function new_round() public only_lottery_contract
     {
@@ -79,7 +83,7 @@ contract Entropy {
         payable(msg.sender).transfer(collateral_threshold + (entropy_reward / num_providers));
     }
     
-    function test_hash(uint256 _entropy_payload, uint256 _salt) pure public returns (bytes32)
+    function test_hash(uint256 _entropy_payload, uint256 _salt) view public returns (bytes32)
     {
         return sha256(abi.encodePacked(_entropy_payload, _salt));
     }
@@ -100,6 +104,11 @@ contract Entropy {
     function set_lottery_contract(address payable _new_contract) public only_owner
     {
         lottery_contract = _new_contract;
+    }
+
+    function set_collateral_amount(uint256 _collateral) public only_owner
+    {
+        collateral_threshold = _collateral;
     }
 
     function rescueERC20(address token, address to) external only_owner {
