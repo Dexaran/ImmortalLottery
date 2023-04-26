@@ -82,7 +82,7 @@ contract Lottery {
     
     function deposit() public payable
     {
-        require (msg.value > min_allowed_bet, "Minimum bet condition is not met");
+        require (msg.value >= min_allowed_bet, "Minimum bet condition is not met");
         require (players[msg.sender].num_deposits[current_round] < max_allowed_deposits || players[msg.sender].last_round < current_round, "Too much deposits during this round");
         require (get_phase() == 1, "Deposits are only allowed during the depositing phase");
         
@@ -101,17 +101,19 @@ contract Lottery {
         players[msg.sender].win_conditions[current_round][players[msg.sender].num_deposits[current_round]].interval_end   = current_interval_end + msg.value;
         current_interval_end += msg.value;
         
-        uint256 _reward_with_fees = msg.value;
+        uint256 _reward_after_fees = msg.value;
+
         
         // TODO: replace it with SafeMath
         // TODO: update the contract to only send rewards upon completion of the round
         send_token_reward(msg.value * token_reward_fee / 1000);
-        _reward_with_fees -= msg.value * token_reward_fee / 1000;
+        _reward_after_fees -= (msg.value * token_reward_fee / 1000);
+        
         
         send_entropy_reward(msg.value * entropy_fee / 1000);
-        _reward_with_fees -= msg.value * entropy_fee / 1000;
+        _reward_after_fees -= msg.value * entropy_fee / 1000;
         
-        round_reward += _reward_with_fees;
+        round_reward += _reward_after_fees;
     }
     
     function refund(uint256 _round) external
