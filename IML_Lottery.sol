@@ -13,11 +13,15 @@ contract Lottery {
     address payable public entropy_contract;
     address payable public reward_pool_contract; // Token rewards go to the special "staking contract"
     
-    uint256 public deposits_phase_duration = 3 days; // The length of a phase when deposits are accepted;
-    uint256 public entropy_phase_duration  = 1 days; // The length of a phase when entropy providers reveal their entropy inputs;
-    
+    //uint256 public deposits_phase_duration = 3 days; // The length of a phase when deposits are accepted;
+    //uint256 public entropy_phase_duration  = 1 days; // The length of a phase when entropy providers reveal their entropy inputs;
+    uint256 public deposits_phase_duration = 10 minutes;
+    uint256 public entropy_phase_duration  = 5 minutes;
+
     uint256 public entropy_fee          = 30;   // (will be divided by 1000 during calculations i.e. 1 means 0.1%) | this reward goes to the entropy providers reward pool
+    // 30 is 3%
     uint256 public token_reward_fee     = 100;  // This reward goes to staked tokens reward pool
+    // 100 is 10%
     
     uint256 public min_allowed_bet      = 1000 ether; // 1K CLO for now
     uint8   public max_allowed_deposits = 20;          // A user can make 20 bets during a single round
@@ -64,7 +68,7 @@ contract Lottery {
         // 2 - deposits are acquired         / entropy revealing phase
         
         uint8 _status = 0;
-        if(round_start_timestamp < block.timestamp && block.timestamp < round_start_timestamp + deposits_phase_duration)
+        if(round_start_timestamp <= block.timestamp && block.timestamp <= round_start_timestamp + deposits_phase_duration)
         {
             _status = 1;
         }
@@ -78,7 +82,7 @@ contract Lottery {
     
     function deposit() public payable
     {
-        require (msg.value > min_allowed_bet, "Minimum bet condition is not met");
+        require (msg.value >= min_allowed_bet, "Minimum bet condition is not met");
         require (players[msg.sender].num_deposits[current_round] < max_allowed_deposits || players[msg.sender].last_round < current_round, "Too much deposits during this round");
         require (get_phase() == 1, "Deposits are only allowed during the depositing phase");
         
@@ -97,17 +101,19 @@ contract Lottery {
         players[msg.sender].win_conditions[current_round][players[msg.sender].num_deposits[current_round]].interval_end   = current_interval_end + msg.value;
         current_interval_end += msg.value;
         
-        uint256 _reward_with_fees = msg.value;
+        uint256 _reward_after_fees = msg.value;
+
         
         // TODO: replace it with SafeMath
         // TODO: update the contract to only send rewards upon completion of the round
-        //send_token_reward(msg.value * token_reward_fee / 1000);
-        _reward_with_fees -= msg.value * token_reward_fee / 1000;
+        send_token_reward(msg.value * token_reward_fee / 1000);
+        _reward_after_fees -= (msg.value * token_reward_fee / 1000);
         
-        //send_entropy_reward(msg.value * entropy_fee / 1000);
-        _reward_with_fees -= msg.value * entropy_fee / 1000;
         
-        round_reward += _reward_with_fees;
+        send_entropy_reward(msg.value * entropy_fee / 1000);
+        _reward_after_fees -= msg.value * entropy_fee / 1000;
+        
+        round_reward += _reward_after_fees;
     }
     
     function refund(uint256 _round) external
@@ -249,5 +255,19 @@ contract Lottery {
     function rescueERC20(address token, address to) external only_owner {
         uint256 value = IERC20(token).balanceOf(address(this));
         IERC20(token).transfer(to, value);
+    }
+
+    function configure(uint256 _min_bet, uint8 _max_deposits, uint256 _deposit_phase_duration, uint256 _reveal_phase_duration) public only_owner
+    {
+        min_allowed_bet = _min_bet;
+        max_allowed_deposits = _max_deposits;
+        deposits_phase_duration = _deposit_phase_duration;
+        entropy_phase_duration  = _reveal_phase_duration;
+    }
+
+    function configureFees(uint256 _entropy_fee, uint256 _token_reward_fee) public only_owner
+    {
+        entropy_fee = _entropy_fee;
+        token_reward_fee = _token_reward_fee;
     }
 }
