@@ -6,6 +6,7 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
 abstract contract Entropy_interface {
     function get_entropy() public virtual view returns (uint256);
     function new_round() virtual external;
+    function deposit_entropy_reward() external virtual payable;
 }
 
 contract Lottery {
@@ -138,8 +139,9 @@ contract Lottery {
     function send_entropy_reward(uint256 _reward) internal
     {
         //entropy_contract.transfer(msg.value * entropy_fee / 1000);
-        
-        entropy_contract.transfer(_reward);
+        //entropy_contract.transfer(_reward);
+
+        Entropy_interface(entropy_contract).deposit_entropy_reward{value: _reward}();
     }
     
     function send_token_reward(uint256 _reward) internal
