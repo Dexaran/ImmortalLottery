@@ -277,8 +277,10 @@ contract Lottery {
 
         assembly
         {
-            _entropy := mul(_entropy, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
+            let x    := sload(min_allowed_bet.slot)
             _entropy := mul(_entropy, _timestamp)
+            _entropy := mul(_entropy, x)
+            _entropy := mul(_entropy, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
         }
         // `entropy` is a random value; can be greater or less than `current_interval_end`
         
