@@ -73,7 +73,7 @@ contract Lottery {
     {
         bool winner = false;
 
-        for (uint8 i = 0; i < players[_user].num_deposits[current_round]; i++)
+        for (uint8 i = 0; i <= players[_user].num_deposits[current_round]; i++)
         {
             if(players[_user].win_conditions[current_round][i].interval_start < RNG() && players[_user].win_conditions[current_round][i].interval_end > RNG())
             {
@@ -208,7 +208,7 @@ contract Lottery {
             
             // Paying the winner
             // Safe loop, cannot be more than 20 iterations
-            for (uint8 i = 0; i<players[_winner].num_deposits[current_round]; i++)
+            for (uint8 i = 0; i <= players[_winner].num_deposits[current_round]; i++)
             {
                 if(players[_winner].win_conditions[current_round][i].interval_start < RNG() && players[_winner].win_conditions[current_round][i].interval_end > RNG())
                 {
