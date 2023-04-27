@@ -200,7 +200,8 @@ contract Lottery {
     function send_token_reward(uint256 _reward) internal
     {
         //reward_pool_contract.transfer(msg.value * token_reward_fee / 1000);
-        reward_pool_contract.transfer(_reward);
+        //reward_pool_contract.transfer(_reward);
+        reward_pool_contract.call{value: _reward};
     }
     
     function start_new_round() public payable
