@@ -30,6 +30,7 @@ contract Entropy {
 
     uint256 public round_entropy_collateral;
     
+    /*
     receive() external payable
     {
         //deposit_entropy_reward();
@@ -39,6 +40,14 @@ contract Entropy {
     fallback() external payable
     {
         //deposit_entropy_reward();
+        entropy_reward += msg.value;
+    }
+    */
+
+
+    // Implemented a separate funciton to prevent accidental deposits of funds.
+    function deposit_entropy_reward() external payable
+    {
         entropy_reward += msg.value;
     }
 
