@@ -9,6 +9,9 @@ abstract contract Lottery_interface {
 }
 
 contract Entropy {
+    event EntropySubmitted(address indexed provider, bytes32 hash);
+    event EntropyRevealed(address indexed provider, uint256 entropy_payload, uint256 salt);
+
     address public owner = msg.sender;
     address public lottery_contract;
     
@@ -90,6 +93,8 @@ contract Entropy {
         
         num_providers++;
         round_entropy_collateral += msg.value;
+
+        emit EntropySubmitted(msg.sender, _entropy_hash);
     }
     
     function reveal_entropy(uint256 _entropy_payload, uint256 _salt) public
@@ -108,6 +113,8 @@ contract Entropy {
         }
 
         payable(msg.sender).transfer(collateral_threshold + (entropy_reward / num_providers));
+
+        emit EntropyRevealed(msg.sender, _entropy_payload, _salt);
     }
     
     function test_hash(uint256 _entropy_payload, uint256 _salt) view public returns (bytes32)
