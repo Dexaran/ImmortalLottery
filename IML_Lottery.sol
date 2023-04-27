@@ -7,6 +7,7 @@ abstract contract Entropy_interface {
     function get_entropy() public virtual view returns (uint256);
     function new_round() virtual external;
     function deposit_entropy_reward() external virtual payable;
+    function get_entropy_collateral() public view virtual returns (uint256);
 }
 
 contract Lottery {
@@ -67,6 +68,7 @@ contract Lottery {
         // 0 - the lottery is not active     / pending reward claim or new round start
         // 1 - a lottery round is in progress/ acquiring deposits
         // 2 - deposits are acquired         / entropy revealing phase
+        // 3 - entropy is revealed           / it is the time to pay the winner
         
         uint8 _status = 0;
         if(round_start_timestamp <= block.timestamp && block.timestamp <= round_start_timestamp + deposits_phase_duration)
@@ -76,6 +78,10 @@ contract Lottery {
         else if (round_start_timestamp < block.timestamp && block.timestamp < round_start_timestamp + deposits_phase_duration + entropy_phase_duration)
         {
             _status = 2;
+        }
+        else if (round_start_timestamp < block.timestamp && block.timestamp > round_start_timestamp + deposits_phase_duration + entropy_phase_duration && !round_reward_paid)
+        {
+            _status = 3;
         }
         
         return _status;
@@ -229,7 +235,9 @@ contract Lottery {
     function check_entropy_criteria() public returns (bool)
     {
         // Needs to check the sufficiency of entropy for the round reward prizepool size
-        return true;
+        //return true;
+
+        return Entropy_interface(entropy_contract).get_entropy_collateral() > 0;
     }
     
     modifier only_owner
