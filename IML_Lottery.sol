@@ -85,10 +85,11 @@ contract Lottery {
     
     function get_phase() public view returns (uint8)
     {
-        // 0 - the lottery is not active     / pending reward claim or new round start
-        // 1 - a lottery round is in progress/ acquiring deposits
-        // 2 - deposits are acquired         / entropy revealing phase
-        // 3 - entropy is revealed           / it is the time to pay the winner
+        // 0 - the lottery is not active                      / pending reward claim or new round start
+        // 1 - a lottery round is in progress                 / acquiring deposits
+        // 2 - deposits are acquired                          / entropy revealing phase
+        // 3 - entropy is revealed, but winner is not paid    / it is the time to pay the winner
+        // 4 - round is finished and the winner is paid       / anyone can start a new round
         
         uint8 _status = 0;
         if(round_start_timestamp <= block.timestamp && block.timestamp <= round_start_timestamp + deposits_phase_duration)
@@ -102,6 +103,10 @@ contract Lottery {
         else if (round_start_timestamp < block.timestamp && block.timestamp > round_start_timestamp + deposits_phase_duration + entropy_phase_duration && !round_reward_paid)
         {
             _status = 3;
+        }
+        else if (round_start_timestamp < block.timestamp && block.timestamp > round_start_timestamp + deposits_phase_duration + entropy_phase_duration && round_reward_paid)
+        {
+            _status = 4;
         }
         
         return _status;
