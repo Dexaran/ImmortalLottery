@@ -272,7 +272,14 @@ contract Lottery {
     {
         // Primitive random number generator dependant on both `entropy` and `interval` for testing reasons
         uint256 _entropy = Entropy_interface(entropy_contract).get_entropy();
+        uint256 _timestamp = round_start_timestamp + deposits_phase_duration + entropy_phase_duration;
         uint256 _result;
+
+        assembly
+        {
+            _entropy := mul(_entropy, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
+            _entropy := mul(_entropy, _timestamp)
+        }
         // `entropy` is a random value; can be greater or less than `current_interval_end`
         
         if(_entropy > current_interval_end)
