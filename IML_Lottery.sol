@@ -11,6 +11,11 @@ abstract contract Entropy_interface {
 }
 
 contract Lottery {
+    event NewRound(uint256 indexed round_id);
+    event RoundFinished(uint256 indexed round_id, address indexed winner, uint256 reward);
+    event Deposit(address indexed depositor, uint256 amount_deposited, uint256 amount_credited);
+    event Refund(address indexed receiver, uint256 indexed round_id, uint256 amount);
+
     address public owner = msg.sender;
     address payable public entropy_contract;
     address payable public reward_pool_contract; // Token rewards go to the special "staking contract"
@@ -55,7 +60,18 @@ contract Lottery {
     
     receive() external payable
     {
-        deposit();
+        if(get_phase() == 0)
+        {
+            start_new_round();
+        }
+        else if(get_phase() == 1)
+        {
+            deposit();
+        }
+        else
+        {
+            revert();
+        }
     }
     
     function get_round() public view returns (uint256)
@@ -104,10 +120,12 @@ contract Lottery {
         {
             _status = 3;
         }
+        /*
         else if (round_start_timestamp < block.timestamp && block.timestamp > round_start_timestamp + deposits_phase_duration + entropy_phase_duration && round_reward_paid)
         {
             _status = 4;
         }
+        */
         
         return _status;
     }
@@ -146,6 +164,8 @@ contract Lottery {
         _reward_after_fees -= msg.value * entropy_fee / 1000;
         
         round_reward += _reward_after_fees;
+
+        emit Deposit(msg.sender, msg.value, _reward_after_fees);
     }
     
     function refund(uint256 _round) external
@@ -165,6 +185,8 @@ contract Lottery {
         
         players[msg.sender].round_refunded[_round] = true;
         payable(msg.sender).transfer(_reward);
+
+        emit Refund(msg.sender, _round, _reward);
     }
     
     function send_entropy_reward(uint256 _reward) internal
@@ -186,6 +208,9 @@ contract Lottery {
         require(current_round == 0 || round_reward_paid, "Cannot start a new round while reward for the previous one is not paid. Call finish_round function");
         
         current_round++;
+
+        emit NewRound(current_round);
+
         round_start_timestamp = block.timestamp;
         current_interval_end  = 0;
         round_reward_paid     = false;
@@ -221,6 +246,8 @@ contract Lottery {
                     round_reward_paid = true;
                 }
             }
+
+            emit RoundFinished(current_round, _winner, round_reward);
         }
         else
         {
@@ -228,6 +255,8 @@ contract Lottery {
             // round_successful[current_round] = false; // This values are `false` by default in solidity
             
             round_reward_paid = true;
+
+            emit RoundFinished(current_round, address(0), 0);
         }
         
         require(round_reward_paid, "The provided address is not a winner of the current round");
