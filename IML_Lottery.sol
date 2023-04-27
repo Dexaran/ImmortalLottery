@@ -62,6 +62,26 @@ contract Lottery {
     {
         return current_round;
     }
+
+    function get_win_conditions(address _player, uint256 _round, uint8 _depoindex) public view returns(uint256 _start, uint256 _end)
+    {
+        _start = players[_player].win_conditions[_round][_depoindex].interval_start;
+        _end   = players[_player].win_conditions[_round][_depoindex].interval_end;
+    }
+
+    function is_winner(address _user) public view returns (bool)
+    {
+        bool winner = false;
+
+        for (uint8 i = 0; i < players[_user].num_deposits[current_round]; i++)
+        {
+            if(players[_user].win_conditions[current_round][i].interval_start < RNG() && players[_user].win_conditions[current_round][i].interval_end > RNG())
+            {
+                winner = true;
+            }
+        }
+        return winner;
+    }
     
     function get_phase() public view returns (uint8)
     {
