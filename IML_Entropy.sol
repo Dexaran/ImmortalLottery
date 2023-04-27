@@ -19,8 +19,8 @@ contract Entropy {
     }
     
     uint256 public collateral_threshold = 100000 ether;     // Collateral for one entropy submission
-    mapping (bytes32=>bool) public prohibited_hashes;       // A mapping of already used entropy submissions
-    mapping (address=>provider) public entropy_providers;   // A mapping of active entropy submissions of the round
+    mapping (bytes32 => bool) public prohibited_hashes;       // A mapping of already used entropy submissions
+    mapping (address => provider) public entropy_providers;   // A mapping of active entropy submissions of the round
     
     uint256 public entropy_reward = 0;                  // Collected entropy reward for the current round
     
@@ -96,8 +96,17 @@ contract Entropy {
     {
         require(entropy_providers[msg.sender].round == current_round, "The address is trying to reveal the entropy for inappropriate round");
         require(sha256(abi.encodePacked(_entropy_payload, _salt)) == entropy_providers[msg.sender].entropy_hash, "Entropy values do not match the provided hash");
-        // require(Lottery_interface(lottery_contract).get_phase() == 2, "Entropy reveals are only allowed during the reveal phase");
-        entropy += _entropy_payload;
+        require(Lottery_interface(lottery_contract).get_phase() == 2, "Entropy reveals are only allowed during the reveal phase");
+
+        //entropy += _entropy_payload;
+        
+        assembly
+        {
+            let _entropy          := sload(entropy.slot)
+            _entropy := add(_entropy, _entropy_payload)
+            sstore(entropy.slot, _entropy)
+        }
+
         payable(msg.sender).transfer(collateral_threshold + (entropy_reward / num_providers));
     }
     
