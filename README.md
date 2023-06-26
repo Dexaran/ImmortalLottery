@@ -9,6 +9,14 @@ If you have any feedback or questions - feel free to create a [new issue](https:
 - Entropy: 0x857803da626177C946012461382685d323201F32
 - Lottery (mainnet CLO; 1 hour deposit; 1 hour reveal phase): 0xF85C47bA456c1324d99Fb58010A2cdeB26FFcD9a
 
+## Deploying custom lottery
+
+1. Compile & deploy the [Lottery contract](https://github.com/Dexaran/ImmortalLottery/blob/main/IML_Lottery.sol).
+2. Compile & deploy the [Entropy contract](https://github.com/Dexaran/ImmortalLottery/blob/main/IML_Entropy.sol).
+3. Call the [configure](https://github.com/Dexaran/ImmortalLottery/blob/main/IML_Lottery.sol#L346) function of the Lottery contract and set the (1) min deposit amount in WEI, (2) maximum amount of deposits allowed from one account (recommended 2 to 5 - higher value causes higher GAS during winner calculation), (3) duration of the deposit phase in seconds, (4) duration of the reveal phase in seconds.
+4. Call the set_entropy_contract() function of the Lottery contract and connect it with the Entropy contract address.
+
+
 
 ## Testnet deployment
 
