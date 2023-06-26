@@ -243,7 +243,7 @@ contract Lottery {
             // Safe loop, cannot be more than 20 iterations
             for (uint8 i = 0; i <= players[_winner].num_deposits[current_round]; i++)
             {
-                if(players[_winner].win_conditions[current_round][i].interval_start < RNG() && players[_winner].win_conditions[current_round][i].interval_end > RNG())
+                if(players[_winner].win_conditions[current_round][i].interval_start < RNG() && players[_winner].win_conditions[current_round][i].interval_end >= RNG())
                 {
                     _winner.transfer(round_reward);
                     round_reward_paid = true;
