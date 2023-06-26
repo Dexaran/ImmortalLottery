@@ -32,6 +32,8 @@ contract Entropy {
     uint256 public num_providers = 0;                   // The number of entropy providers for the current round
 
     uint256 public round_entropy_collateral;
+
+    uint256 public revealed_hashes = 0;
     
     /*
     receive() external payable
@@ -52,6 +54,11 @@ contract Entropy {
     function deposit_entropy_reward() external payable
     {
         entropy_reward += msg.value;
+    }
+
+    function get_number_of_revealed() public view returns(uint256)
+    {
+        return revealed_hashes;
     }
 
     function get_entropy_collateral() public view returns (uint256)
@@ -77,6 +84,7 @@ contract Entropy {
         current_round  = Lottery_interface(lottery_contract).get_round(); // Update the round
         num_providers  = 0;
         round_entropy_collateral = 0;
+        revealed_hashes = 0;
     }
     
     function submit_entropy(bytes32 _entropy_hash) public payable 
@@ -113,6 +121,8 @@ contract Entropy {
         }
 
         payable(msg.sender).transfer(collateral_threshold + (entropy_reward / num_providers));
+
+        revealed_hashes++;
 
         emit EntropyRevealed(msg.sender, _entropy_payload, _salt);
     }
