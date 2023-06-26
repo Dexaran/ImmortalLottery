@@ -33,6 +33,11 @@ contract Lottery {
     
     uint256 public min_allowed_bet      = 1000 ether; // 1K CLO for now
     uint8   public max_allowed_deposits = 20;          // A user can make 20 bets during a single round
+
+    uint256 public max_deposit_pool_threshold = 0;    // Specifies the maximal amount the lottery will accept. 
+                                                      // After the amount is reached 
+                                                      // the lottery will no longer accept deposits.
+                                                      // 0 means "unlimited".
     
     uint256 public current_round;
     uint256 public round_start_timestamp;
@@ -86,6 +91,11 @@ contract Lottery {
     function get_round() public view returns (uint256)
     {
         return current_round;
+    }
+
+    function get_max_deposit_threshold() public view returns (uint256)
+    {
+        return max_deposit_pool_threshold;
     }
 
     function get_win_conditions(address _player, uint256 _round, uint8 _depoindex) public view returns(uint256 _start, uint256 _end)
@@ -144,6 +154,11 @@ contract Lottery {
         require (msg.value >= min_allowed_bet, "Minimum bet condition is not met");
         require (players[msg.sender].num_deposits[current_round] < max_allowed_deposits || players[msg.sender].last_round < current_round, "Too much deposits during this round");
         require (get_phase() == 1, "Deposits are only allowed during the depositing phase");
+
+        if(max_deposit_pool_threshold != 0)
+        {
+            require(msg.value + round_reward <= max_deposit_pool_threshold, "Round reward threshold exceeded");
+        }
         
         if(players[msg.sender].last_round < current_round)
         {
