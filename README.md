@@ -6,7 +6,7 @@ If you have any feedback or questions - feel free to create a [new issue](https:
 
 ## Deployment
 
-- Entropy: 0xad4e8434649BDa8bD2fF27e2e3E5a49BC3d5A661
+- Entropy: 0x857803da626177C946012461382685d323201F32
 - Lottery (mainnet CLO; 1 hour deposit; 1 hour reveal phase): 0xF85C47bA456c1324d99Fb58010A2cdeB26FFcD9a
 
 
