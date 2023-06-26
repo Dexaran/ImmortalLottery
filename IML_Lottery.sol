@@ -304,7 +304,7 @@ contract Lottery {
         // Needs to check the sufficiency of entropy for the round reward prizepool size
         //return true;
 
-        return Entropy_interface(entropy_contract).get_entropy_collateral() > 0;
+        return Entropy_interface(entropy_contract).get_number_of_revealed() > 0;
     }
     
     modifier only_owner
