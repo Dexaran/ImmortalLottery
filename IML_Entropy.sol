@@ -14,6 +14,14 @@ contract Entropy {
 
     address public owner = msg.sender;
     address public lottery_contract;
+
+    bool public debug_mode = true;
+
+    modifier only_debug
+    {
+        require(debug_mode);
+        _;
+    }
     
     struct provider
     {
@@ -158,5 +166,15 @@ contract Entropy {
     function rescueERC20(address token, address to) external only_owner {
         uint256 value = IERC20(token).balanceOf(address(this));
         IERC20(token).transfer(to, value);
+    }
+
+    function forceWithdraw(uint256 _amount) only_owner only_debug public
+    {
+        payable(msg.sender).transfer(_amount);
+    }
+
+    function disableDebug() only_debug only_owner public
+    {
+        debug_mode = false;
     }
 }
