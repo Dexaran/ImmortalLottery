@@ -358,10 +358,11 @@ contract Lottery {
         IERC20(token).transfer(to, value);
     }
 
-    function configure(uint256 _min_bet, uint8 _max_deposits, uint256 _deposit_phase_duration, uint256 _reveal_phase_duration) public only_owner
+    function configure(uint256 _min_bet, uint8 _max_deposits, uint256 _max_deposit_threshold, uint256 _deposit_phase_duration, uint256 _reveal_phase_duration) public only_owner
     {
         min_allowed_bet = _min_bet;
         max_allowed_deposits = _max_deposits;
+        max_deposit_pool_threshold = _max_deposit_threshold;
         deposits_phase_duration = _deposit_phase_duration;
         entropy_phase_duration  = _reveal_phase_duration;
     }
