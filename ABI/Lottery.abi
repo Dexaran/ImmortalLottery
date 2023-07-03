@@ -133,6 +133,11 @@
 			},
 			{
 				"internalType": "uint256",
+				"name": "_max_deposit_threshold",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
 				"name": "_deposit_phase_duration",
 				"type": "uint256"
 			},
