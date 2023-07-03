@@ -7,7 +7,7 @@ If you have any feedback or questions - feel free to create a [new issue](https:
 ## Deployment
 
 - Entropy: 0x857803da626177C946012461382685d323201F32
-- Lottery (mainnet CLO; 1 hour deposit; 1 hour reveal phase): 0xF85C47bA456c1324d99Fb58010A2cdeB26FFcD9a
+- Lottery (mainnet CLO; 1 hour deposit; 1 hour reveal phase): 0xE5412b4420f69A5509e2bE93A5AEA0F666EEF20E
 
 ## Deploying custom lottery
 
